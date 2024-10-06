@@ -1,0 +1,57 @@
+# Ignore .env files in all subdirectories (Laravel environment files)
+**/.env
+**/.env.backup
+**/.env.local
+**/.env.*.backup
+
+# Ignore composer dependencies
+**/vendor/
+
+# Ignore node modules for projects using NPM/Yarn
+**/node_modules/
+
+# Ignore Laravel log files
+**/storage/logs/*.log
+
+# Ignore Laravel compiled files
+**/bootstrap/cache/*.php
+
+# Ignore Laravel storage directories
+**/storage/app/public/*
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/testing/*
+**/storage/framework/views/*
+**/storage/logs/*
+
+# Ignore IDE-specific files
+**/.idea/
+**/.vscode/
+
+# Ignore build artifacts (npm, yarn)
+**/public/hot
+**/public/storage
+**/public/mix-manifest.json
+**/public/css/
+**/public/js/
+
+# Ignore NPM/Yarn lock files if you prefer not to commit them
+**/package-lock.json
+**/yarn.lock
+
+# Ignore compiled classes, PHPStorm generated files, and caches
+**/vendor/
+**/composer.lock
+
+# Ignore debugbar storage for Laravel Debugbar (if used)
+**/storage/debugbar/*
+
+# Ignore temporary local files
+**/Homestead.json
+**/Homestead.yaml
+**/npm-debug.log*
+**/yarn-error.log*
+**/.phpunit.result.cache
+
+# Ignore PHPUnit result cache files
+**/phpunit.result.cache
