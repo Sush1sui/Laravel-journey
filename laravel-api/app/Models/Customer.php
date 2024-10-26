@@ -9,6 +9,16 @@ class Customer extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'type',
+        'email',
+        'address',
+        'city',
+        'state',
+        'postal_code'
+    ];
+
     // set relationship to has many invoices
     // invoice will be reverse,
     // instead of has many, it will be just "belongs to"
