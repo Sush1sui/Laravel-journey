@@ -20,7 +20,9 @@ class AuthController extends Controller
     {
         // Check if the 'user_type' is not set or is invalid
         if (!$request->has('user_type') || !in_array($request->user_type, ['S', 'T'])) {
-            return response()->json(['error' => 'The user_type field is required and must be either "S" or "T".'], 400);
+            return response()->json(['errors' => [
+                'user_type' => ['The user_type field is required and must be either "S" or "T".']
+            ]], 400);
         }
 
         // Check if the user exists in Valid_IDs
@@ -29,7 +31,11 @@ class AuthController extends Controller
             ->exists();
 
         if (!$isValidId) {
-            return response()->json(['error' => 'Invalid ID or user type.'], 400);
+            return response()->json([
+                'errors' => [
+                    'id_or_type' => ['Invalid ID or user type.']
+                ]
+            ], 400);
         }
 
         $field = null;
@@ -44,8 +50,8 @@ class AuthController extends Controller
                 'fn' => 'required|string|max:100',
                 'ln' => 'required|string|max:100',
                 'section_id' => 'nullable|integer',
-                'tasks' => 'present|array',
-                'grades' => 'present|array'
+                'tasks' => 'nullable|array',
+                'grades' => 'nullable|array'
             ]);
 
             $user_creds = Student::create([
@@ -66,7 +72,6 @@ class AuthController extends Controller
                 'fn' => 'required|string|max:100',
                 'ln' => 'required|string|max:100',
                 'subjects' => 'present|array',
-                'isAdmin' => 'required|boolean'
             ]);
 
             $user_creds = Teacher::create([
@@ -74,15 +79,20 @@ class AuthController extends Controller
                 'fn' => $request->fn,
                 'ln' => $request->ln,
                 'email' => $request->email,
-                'IsAdmin' => $request->isAdmin,
+                'isAdmin' => false, // Default 'not' if not provided
                 'subjects' => $request->subjects
             ]);
         }
 
         if ($field === null || $user_creds === null) {
-            return response()->json(['error' => 'Error with validating the inputs'], 400);
+            return response()->json([
+                'errors' => [
+                    'input_validation' => ['Error with validating the inputs']
+                ]
+            ], 400);
         }
 
+        // Create the User record
         $user = User::create([
             'id' => $request->id,
             'email' => $request->email,
@@ -90,7 +100,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password)
         ]);
 
-        $token = $user->createToken($request->fn . " " . $request->ln);
+        // Create the API token
+        $token = $user->createToken("{$user->fn} {$user->ln}");
 
         return [
             'user' => $user,
@@ -104,12 +115,16 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email|exists:users',
             'password' => 'required'
+        ], [
+            'email.exists' => 'The provided credentials are incorrect', // Custom message for invalid email
         ]);
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'The provided credentials are incorrect'], 400);
+            return response()->json(['errors' => [
+                'password' => ['The provided credentials are incorrect']
+            ]], 400);
         }
 
         $UserClass = $user->user_type === 'S'
@@ -122,7 +137,9 @@ class AuthController extends Controller
             $user_creds = $UserClass::find($user->id);
 
             if (!$user_creds) {
-                return response()->json(['error' => 'The provided credentials are incorrect'], 404);
+                return response()->json(['errors' => [
+                    'email_or_password' => ['The provided credentials are incorrect']
+                ]], 404);
             }
 
             $token = $user->createToken("{$user_creds->fn} {$user_creds->ln}");
@@ -134,7 +151,9 @@ class AuthController extends Controller
             ];
         }
 
-        return response()->json(['error' => 'The provided credentials are incorrect'], 400);
+        return response()->json(['errors' => [
+            'email_or_password' => ['The provided credentials are incorrect']
+        ]], 400);
     }
 
     public function logout(Request $request)

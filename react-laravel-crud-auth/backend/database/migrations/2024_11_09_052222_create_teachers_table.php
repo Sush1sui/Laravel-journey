@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('fn');
             $table->string('ln');
             $table->string('email');
-            $table->boolean('isAdmin');
+            $table->boolean('isAdmin')->default(false);
             $table->json('subjects');
             $table->timestamps();
         });
