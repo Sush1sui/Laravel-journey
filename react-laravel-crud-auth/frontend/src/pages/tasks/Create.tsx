@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent } from "react";
 
 interface Question {
     q: string;
-    a: string; // This will store the correct answer value directly from the selected choice
+    a: string;
     choices: string[];
     points: number;
 }
@@ -21,72 +21,104 @@ export default function Create() {
     const [errors, setErrors] = useState<string[]>([]);
 
     const handleQuestionChange = (
-        index: number,
+        testIndex: number,
+        questionIndex: number,
         event: ChangeEvent<HTMLInputElement>
     ) => {
-        const updatedTests = [...tests];
-        updatedTests[0][index].q = event.target.value;
-        setTests(updatedTests);
+        setTests((prevTests) => {
+            const updatedTests = [...prevTests];
+            updatedTests[testIndex][questionIndex].q = event.target.value;
+            return updatedTests;
+        });
     };
 
     const handleChoiceChange = (
+        testIndex: number,
         questionIndex: number,
         choiceIndex: number,
         event: ChangeEvent<HTMLInputElement>
     ) => {
-        const updatedTests = [...tests];
-        updatedTests[0][questionIndex].choices[choiceIndex] =
-            event.target.value;
-        setTests(updatedTests);
+        setTests((prevTests) => {
+            const updatedTests = [...prevTests];
+            updatedTests[testIndex][questionIndex].choices[choiceIndex] =
+                event.target.value;
+            return updatedTests;
+        });
     };
 
     const handleCorrectAnswerSelect = (
+        testIndex: number,
         questionIndex: number,
         choiceValue: string
     ) => {
-        const updatedTests = [...tests];
-        updatedTests[0][questionIndex].a = choiceValue; // Set the correct answer to the choice's value
-        setTests(updatedTests);
+        setTests((prevTests) => {
+            const updatedTests = [...prevTests];
+            updatedTests[testIndex][questionIndex].a = choiceValue;
+            return updatedTests;
+        });
     };
 
-    const addNewQuestion = () => {
-        setTests((prevTests) => [
-            [
-                ...prevTests[0],
+    const addNewQuestion = (testIndex: number) => {
+        setTests((prevTests) => {
+            const updatedTests = [...prevTests];
+            updatedTests[testIndex] = [
+                ...updatedTests[testIndex],
                 { q: "", a: "", choices: ["", "", "", ""], points: 1 },
+            ];
+            return updatedTests;
+        });
+    };
+
+    const addNewTest = () => {
+        setTests((prevTests) => [
+            ...prevTests,
+            [
+                {
+                    q: "",
+                    a: "",
+                    choices: ["", "", "", ""],
+                    points: 1,
+                },
             ],
         ]);
     };
 
-    // Validation function to check for blank inputs
     const validateInputs = () => {
         setErrors([]);
         let isValid = true;
-        let errorMessages: string[] = [];
 
-        tests[0].forEach((question, index) => {
-            if (!question.q.trim()) {
-                setErrors((e) => [...e, `Question ${index + 1} is missing.`]);
-                isValid = false;
-            }
-            question.choices.forEach((choice, choiceIndex) => {
-                if (!choice.trim()) {
+        tests.forEach((test, testIndex) => {
+            test.forEach((question, questionIndex) => {
+                if (!question.q.trim()) {
                     setErrors((e) => [
                         ...e,
-                        `Choice ${choiceIndex + 1} for Question ${
-                            index + 1
+                        `Question ${questionIndex + 1} in Test ${
+                            testIndex + 1
                         } is missing.`,
                     ]);
                     isValid = false;
                 }
+                question.choices.forEach((choice, choiceIndex) => {
+                    if (!choice.trim()) {
+                        setErrors((e) => [
+                            ...e,
+                            `Choice ${choiceIndex + 1} for Question ${
+                                questionIndex + 1
+                            } in Test ${testIndex + 1} is missing.`,
+                        ]);
+                        isValid = false;
+                    }
+                });
+                if (!question.a) {
+                    setErrors((e) => [
+                        ...e,
+                        `No correct answer selected for Question ${
+                            questionIndex + 1
+                        } in Test ${testIndex + 1}.`,
+                    ]);
+                    isValid = false;
+                }
             });
-            if (!question.a) {
-                setErrors((e) => [
-                    ...e,
-                    `No correct answer selected for Question ${index + 1}.`,
-                ]);
-                isValid = false;
-            }
         });
 
         if (!isValid) {
@@ -127,45 +159,52 @@ export default function Create() {
                     </div>
                 </div>
 
-                {/* Render all questions */}
-                <div>
-                    {tests[0].map((question, index) => (
-                        <div key={index + 1}>
-                            <br />
-                            <div>
-                                <label htmlFor={`${index + 1}`}>
-                                    {index + 1}
+                {/* Render all tests */}
+                {tests.map((test, testIndex) => (
+                    <div key={testIndex} className="border-gray-300">
+                        <br />
+                        <h2>Test {testIndex + 1}</h2>
+                        {test.map((question, questionIndex) => (
+                            <div key={questionIndex}>
+                                <br />
+                                <label
+                                    htmlFor={`question-${testIndex}-${questionIndex}`}
+                                >
+                                    Question {questionIndex + 1}
                                 </label>
                                 <input
                                     type="text"
-                                    name="q"
-                                    id={`${index + 1}`}
+                                    id={`question-${testIndex}-${questionIndex}`}
                                     placeholder="Question"
                                     value={question.q}
                                     onChange={(e) =>
-                                        handleQuestionChange(index, e)
+                                        handleQuestionChange(
+                                            testIndex,
+                                            questionIndex,
+                                            e
+                                        )
                                     }
                                 />
                                 <br />
                                 <h4>Choices</h4>
-                                <br />
                                 {question.choices.map((choice, choiceIndex) => (
                                     <div key={choiceIndex}>
                                         <label
-                                            htmlFor={`choice-${index}-${choiceIndex}`}
+                                            htmlFor={`choice-${testIndex}-${questionIndex}-${choiceIndex}`}
                                         >
                                             Choice {choiceIndex + 1}
                                         </label>
                                         <input
                                             type="text"
-                                            id={`choice-${index}-${choiceIndex}`}
+                                            id={`choice-${testIndex}-${questionIndex}-${choiceIndex}`}
                                             placeholder={`Choice ${
                                                 choiceIndex + 1
                                             }`}
                                             value={choice}
                                             onChange={(e) =>
                                                 handleChoiceChange(
-                                                    index,
+                                                    testIndex,
+                                                    questionIndex,
                                                     choiceIndex,
                                                     e
                                                 )
@@ -173,32 +212,43 @@ export default function Create() {
                                         />
                                         <input
                                             type="radio"
-                                            name={`correct-answer-${index}`}
+                                            name={`correct-answer-${testIndex}-${questionIndex}`}
                                             checked={question.a === choice}
                                             onChange={() =>
                                                 handleCorrectAnswerSelect(
-                                                    index,
+                                                    testIndex,
+                                                    questionIndex,
                                                     choice
                                                 )
                                             }
                                         />
-                                        <br />
                                     </div>
                                 ))}
+                                <br />
                             </div>
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        className="primary-btn"
-                        onClick={addNewQuestion}
-                    >
-                        Add Question
-                    </button>
-                </div>
-
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => addNewQuestion(testIndex)}
+                            className="primary-btn"
+                        >
+                            Add Question
+                        </button>
+                        <br />
+                    </div>
+                ))}
                 <br />
-                <button className="primary-btn">Create</button>
+                <button
+                    type="button"
+                    onClick={addNewTest}
+                    className="primary-btn"
+                >
+                    Add Test
+                </button>
+                <br />
+                <button type="submit" className="primary-btn">
+                    Create
+                </button>
             </form>
         </>
     );
