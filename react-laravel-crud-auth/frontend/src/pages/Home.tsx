@@ -11,7 +11,7 @@ export default function Home() {
 
     return (
         <>
-            <h1 className="title">Latest Posts {context.token}</h1>
+            <h1 className="title">Latest Tasks {context.token}</h1>
         </>
     );
 }

@@ -9,6 +9,7 @@ import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
+import Create from "./pages/tasks/Create";
 
 function App() {
     const context = useContext(AppContext);
@@ -25,6 +26,9 @@ function App() {
                             <Route path="register" element={<Register />} />
                             <Route path="login" element={<Login />} />
                         </>
+                    )}
+                    {context.token && context.user?.user.user_type === "T" && (
+                        <Route path="tasks/create" element={<Create />} />
                     )}
                 </Route>
 

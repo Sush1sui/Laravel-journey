@@ -39,6 +39,11 @@ export default function Layout() {
             <p className="text-slate-400 text-xs">
                 Welcome back {user.user_creds.fn}
             </p>
+            {user.user.user_type === "T" && (
+                <Link to="/tasks/create" className="nav-link">
+                    New Task
+                </Link>
+            )}
             <form onSubmit={handleLogout}>
                 <button className="nav-link">Logout</button>
             </form>
