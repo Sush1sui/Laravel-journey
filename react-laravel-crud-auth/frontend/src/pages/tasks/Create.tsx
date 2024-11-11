@@ -25,11 +25,9 @@ export default function Create() {
         questionIndex: number,
         event: ChangeEvent<HTMLInputElement>
     ) => {
-        setTests((prevTests) => {
-            const updatedTests = [...prevTests];
-            updatedTests[testIndex][questionIndex].q = event.target.value;
-            return updatedTests;
-        });
+        const updatedTests = [...tests];
+        updatedTests[testIndex][questionIndex].q = event.target.value;
+        setTests(updatedTests);
     };
 
     const handleChoiceChange = (
@@ -38,12 +36,10 @@ export default function Create() {
         choiceIndex: number,
         event: ChangeEvent<HTMLInputElement>
     ) => {
-        setTests((prevTests) => {
-            const updatedTests = [...prevTests];
-            updatedTests[testIndex][questionIndex].choices[choiceIndex] =
-                event.target.value;
-            return updatedTests;
-        });
+        const updatedTests = [...tests];
+        updatedTests[testIndex][questionIndex].choices[choiceIndex] =
+            event.target.value;
+        setTests(updatedTests);
     };
 
     const handleCorrectAnswerSelect = (
@@ -51,20 +47,28 @@ export default function Create() {
         questionIndex: number,
         choiceValue: string
     ) => {
-        setTests((prevTests) => {
-            const updatedTests = [...prevTests];
-            updatedTests[testIndex][questionIndex].a = choiceValue;
-            return updatedTests;
-        });
+        const updatedTests = [...tests];
+        updatedTests[testIndex][questionIndex].a = choiceValue;
+        setTests(updatedTests);
     };
 
     const addNewQuestion = (testIndex: number) => {
         setTests((prevTests) => {
             const updatedTests = [...prevTests];
-            updatedTests[testIndex] = [
-                ...updatedTests[testIndex],
-                { q: "", a: "", choices: ["", "", "", ""], points: 1 },
-            ];
+            updatedTests[testIndex].push({
+                q: "",
+                a: "",
+                choices: ["", "", "", ""],
+                points: 1,
+            });
+            return updatedTests;
+        });
+    };
+
+    const deleteQuestion = (testIndex: number, questionIndex: number) => {
+        setTests((prevTests) => {
+            const updatedTests = [...prevTests];
+            updatedTests[testIndex].splice(questionIndex, 1);
             return updatedTests;
         });
     };
@@ -81,6 +85,12 @@ export default function Create() {
                 },
             ],
         ]);
+    };
+
+    const deleteTest = (testIndex: number) => {
+        setTests((prevTests) =>
+            prevTests.filter((_, index) => index !== testIndex)
+        );
     };
 
     const validateInputs = () => {
@@ -138,40 +148,85 @@ export default function Create() {
 
     return (
         <>
-            <h1>Create a new task</h1>
+            <h1 className="text-2xl font-bold mb-4">Create a new task</h1>
 
-            <form onSubmit={createTask}>
-                <div>
-                    <div>
-                        <input type="text" placeholder="Task Name" />
+            <form
+                onSubmit={createTask}
+                className="border p-4 rounded-lg border-gray-300"
+            >
+                <div className="mb-4">
+                    <div className="mb-2">
+                        <input
+                            type="text"
+                            placeholder="Task Name"
+                            className="border border-gray-300 p-2 rounded w-full"
+                        />
                     </div>
 
-                    <div>
-                        <select name="type" id="type">
+                    <div className="mb-2">
+                        <select
+                            name="type"
+                            id="type"
+                            className="border border-gray-300 p-2 rounded w-full"
+                        >
                             <option value="act">Activity</option>
                             <option value="assessment">Assessment</option>
                             <option value="exam">Exam</option>
                         </select>
                     </div>
 
-                    <div>
-                        <input type="text" placeholder="Subject Code" />
+                    <div className="mb-2">
+                        <input
+                            type="text"
+                            placeholder="Subject Code"
+                            className="border border-gray-300 p-2 rounded w-full"
+                        />
                     </div>
                 </div>
 
                 {/* Render all tests */}
                 {tests.map((test, testIndex) => (
-                    <div key={testIndex} className="border-gray-300">
-                        <br />
-                        <h2>Test {testIndex + 1}</h2>
+                    <div
+                        key={testIndex}
+                        className="border border-gray-300 p-4 rounded-lg mb-4"
+                    >
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-xl font-semibold">
+                                Test {testIndex + 1}
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => deleteTest(testIndex)}
+                                className="bg-red-500 text-white p-2 rounded"
+                            >
+                                Delete Test
+                            </button>
+                        </div>
                         {test.map((question, questionIndex) => (
-                            <div key={questionIndex}>
-                                <br />
-                                <label
-                                    htmlFor={`question-${testIndex}-${questionIndex}`}
-                                >
-                                    Question {questionIndex + 1}
-                                </label>
+                            <div
+                                key={questionIndex}
+                                className="border border-gray-200 p-4 rounded-lg mb-4"
+                            >
+                                <div className="flex justify-between items-center">
+                                    <label
+                                        htmlFor={`question-${testIndex}-${questionIndex}`}
+                                        className="font-medium"
+                                    >
+                                        Question {questionIndex + 1}
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            deleteQuestion(
+                                                testIndex,
+                                                questionIndex
+                                            )
+                                        }
+                                        className="bg-red-500 text-white p-1 rounded"
+                                    >
+                                        Delete Question
+                                    </button>
+                                </div>
                                 <input
                                     type="text"
                                     id={`question-${testIndex}-${questionIndex}`}
@@ -184,13 +239,17 @@ export default function Create() {
                                             e
                                         )
                                     }
+                                    className="border border-gray-300 p-2 rounded w-full mt-2"
                                 />
-                                <br />
-                                <h4>Choices</h4>
+                                <h4 className="font-medium mt-3">Choices</h4>
                                 {question.choices.map((choice, choiceIndex) => (
-                                    <div key={choiceIndex}>
+                                    <div
+                                        key={choiceIndex}
+                                        className="flex items-center mt-2"
+                                    >
                                         <label
                                             htmlFor={`choice-${testIndex}-${questionIndex}-${choiceIndex}`}
+                                            className="mr-2"
                                         >
                                             Choice {choiceIndex + 1}
                                         </label>
@@ -209,6 +268,7 @@ export default function Create() {
                                                     e
                                                 )
                                             }
+                                            className="border border-gray-300 p-2 rounded mr-2"
                                         />
                                         <input
                                             type="radio"
@@ -221,32 +281,32 @@ export default function Create() {
                                                     choice
                                                 )
                                             }
+                                            className="ml-2"
                                         />
                                     </div>
                                 ))}
-                                <br />
                             </div>
                         ))}
                         <button
                             type="button"
                             onClick={() => addNewQuestion(testIndex)}
-                            className="primary-btn"
+                            className="bg-blue-500 text-white p-2 rounded mt-2"
                         >
                             Add Question
                         </button>
-                        <br />
                     </div>
                 ))}
-                <br />
                 <button
                     type="button"
                     onClick={addNewTest}
-                    className="primary-btn"
+                    className="bg-blue-500 text-white p-2 rounded"
                 >
                     Add Test
                 </button>
-                <br />
-                <button type="submit" className="primary-btn">
+                <button
+                    type="submit"
+                    className="bg-green-500 text-white p-2 rounded mt-4"
+                >
                     Create
                 </button>
             </form>
