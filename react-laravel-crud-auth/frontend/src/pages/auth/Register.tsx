@@ -13,8 +13,7 @@ export default function Register() {
         ln: "",
         email: "",
         user_type: "S",
-        isAdmin: "admin",
-        subjects: [],
+
         password: "",
         password_confirmation: "",
     });
@@ -25,9 +24,17 @@ export default function Register() {
         try {
             e.preventDefault();
 
+            const additional_inputs =
+                formData.user_type === "T"
+                    ? { isAdmin: 0, subjects: [] }
+                    : {
+                          tasks: [],
+                          grades: [],
+                      };
+
             const res = await fetch("/api/register", {
                 method: "post",
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData, ...additional_inputs }),
             });
 
             const data = await res.json();

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('task_name');
             $table->json('tests');
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->nullable()->constrained()->cascadeOnDelete();
             $table->integer('score')->nullable();
             $table->string('type');
             $table->integer('total_score');

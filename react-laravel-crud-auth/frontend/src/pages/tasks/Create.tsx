@@ -1,4 +1,6 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useContext } from "react";
+import { AppContext } from "../../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
 interface Question {
     q: string;
@@ -8,6 +10,9 @@ interface Question {
 }
 
 export default function Create() {
+    const context = useContext(AppContext);
+    if (!context) return <p>Loading...</p>;
+    const { token } = context;
     const [tests, setTests] = useState<Question[][]>([
         [
             {
@@ -19,6 +24,10 @@ export default function Create() {
         ],
     ]);
     const [errors, setErrors] = useState<string[]>([]);
+    const [task_name, setTaskName] = useState("");
+    const [type, setType] = useState<"act" | "assessment" | "exam">("act");
+    const [subject_code, setSubject_Code] = useState("");
+    const navigate = useNavigate();
 
     const handleQuestionChange = (
         testIndex: number,
@@ -54,13 +63,19 @@ export default function Create() {
 
     const addNewQuestion = (testIndex: number) => {
         setTests((prevTests) => {
-            const updatedTests = [...prevTests];
-            updatedTests[testIndex].push({
-                q: "",
-                a: "",
-                choices: ["", "", "", ""],
-                points: 1,
-            });
+            const updatedTests = prevTests.map((test, idx) =>
+                idx === testIndex
+                    ? [
+                          ...test,
+                          {
+                              q: "",
+                              a: "",
+                              choices: ["", "", "", ""],
+                              points: 1,
+                          },
+                      ]
+                    : test
+            );
             return updatedTests;
         });
     };
@@ -131,18 +146,56 @@ export default function Create() {
             });
         });
 
-        if (!isValid) {
-            console.log(errors);
-        }
-
         return isValid;
     };
 
     async function createTask(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (validateInputs()) {
-            console.log("Form data:", tests);
-            // Proceed with form submission or further processing
+        try {
+            if (validateInputs()) {
+                console.log(tests);
+
+                const res = await fetch("/api/tasks", {
+                    method: "post",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        task_name,
+                        subject_code,
+                        type,
+                        tests,
+                    }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    if (data.errors) {
+                        // Type casting the value of data.errors to string[]
+                        Object.values(data.errors).forEach((errorMessages) => {
+                            // Type casting errorMessages to string[] explicitly
+                            (errorMessages as string[]).forEach((message) => {
+                                setErrors((prevErrors) => [
+                                    ...prevErrors,
+                                    message,
+                                ]);
+                            });
+                        });
+                    } else {
+                        setErrors((prevErrors) => [
+                            ...prevErrors,
+                            "Something went wrong with creating task",
+                        ]);
+                    }
+                }
+
+                console.log(data);
+                navigate("/");
+            } else {
+                console.log(errors);
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -160,6 +213,8 @@ export default function Create() {
                             type="text"
                             placeholder="Task Name"
                             className="border border-gray-300 p-2 rounded w-full"
+                            value={task_name}
+                            onChange={(e) => setTaskName(e.target.value)}
                         />
                     </div>
 
@@ -168,6 +223,15 @@ export default function Create() {
                             name="type"
                             id="type"
                             className="border border-gray-300 p-2 rounded w-full"
+                            value={type}
+                            onChange={(e) =>
+                                setType(
+                                    e.target.value as
+                                        | "act"
+                                        | "assessment"
+                                        | "exam"
+                                )
+                            }
                         >
                             <option value="act">Activity</option>
                             <option value="assessment">Assessment</option>
@@ -180,6 +244,8 @@ export default function Create() {
                             type="text"
                             placeholder="Subject Code"
                             className="border border-gray-300 p-2 rounded w-full"
+                            value={subject_code}
+                            onChange={(e) => setSubject_Code(e.target.value)}
                         />
                     </div>
                 </div>
@@ -303,6 +369,12 @@ export default function Create() {
                 >
                     Add Test
                 </button>
+                {errors.length > 0 &&
+                    errors.map((errorMsg, i) => (
+                        <p key={i} className="error">
+                            {errorMsg}
+                        </p>
+                    ))}
                 <button
                     type="submit"
                     className="bg-green-500 text-white p-2 rounded mt-4"
